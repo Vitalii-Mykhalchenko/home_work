@@ -4,14 +4,15 @@ from collections import UserDict
 
 class Field:
     def __init__(self, value):
-        self._value = value
+        self._value = None
+        self.value = value
 
     @property
     def value(self):
         return self._value
 
     @value.setter
-    def set_value(self, value):
+    def value(self, value):
         self._value = value
 
     def __str__(self):
@@ -26,12 +27,10 @@ class Name(Field):
 
 class Phone(Field):
     def __init__(self, phone):
-        if not (len(phone) == 10 and phone.isdigit()):
-            raise ValueError()
         super().__init__(phone)
 
     @Field.value.setter
-    def set_value(self, value):
+    def value(self, value):
         if not (len(value) == 10 and value.isdigit()):
             raise ValueError
         self._value = value
@@ -39,24 +38,23 @@ class Phone(Field):
 
 class Birthday(Field):
     def __init__(self, string):
-        if string is None:
-            super().__init__(string)
-        else:
-            data = datetime.strptime(string, '%d.%m.%Y')
-            super().__init__(data)
+        super().__init__(string)
 
     @Field.value.setter
-    def set_value(self, value: str):
-        self.value = datetime.strptime(value, '%d.%m.%Y')
+    def value(self, value: str):
+        if value:
+            self.value = datetime.strptime(value, '%d.%m.%Y')
 
 
 class Record:
     def __init__(self, name, birthday=None):
+
         self.name = Name(name)
         self.phones = []
         self.birthday = Birthday(birthday)
 
     def add_phone(self, phone):
+
         new_phone = Phone(phone)
         self.phones.append(new_phone)
 
@@ -85,14 +83,11 @@ class Record:
     def days_to_birthday(self):
         print(self.birthday)
         if self.birthday.value is None:
-            print("!!!!!!!!!!")
             return None
         today = datetime.now()
         next_birthday = self.birthday.value.replace(year=today.year)
-        # Якщо день народження вже минув у цьому році, додаємо 1 рік
         if next_birthday < today:
             next_birthday = next_birthday.replace(year=today.year + 1)
-        # Обчислюємо різницю між сьогоднішньою датою та наступним днем народження
         days_until = (next_birthday - today).days
         return f" {days_until} days until the next birthday"
 
@@ -118,7 +113,6 @@ class AddressBook(UserDict):
 
     def iterator(self, index=1):
         my_dict = self.data
-        dict_len = len(self.data)
         page_size = 10
         values_list = list(my_dict.values())
         pages = [values_list[i:i + page_size]
@@ -128,7 +122,6 @@ class AddressBook(UserDict):
         curent_page = next(iter(pages[start_page:end_page]), [])
 
         result = f"Page {index} \n"
-
         for record in curent_page:
             result += f"{record} \n"
         return result
